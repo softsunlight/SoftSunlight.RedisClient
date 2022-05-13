@@ -3,3 +3,8 @@
 ################################################################################
 
 /CompareWidthCsRedis/bin/Debug/netcoreapp3.1
+/CompareWidthCsRedis/obj
+/SoftSunlight.RedisClient/bin/Debug/netstandard2.0
+/SoftSunlight.RedisClient/obj
+/SoftSunlight.RedisClient.Test/bin/Debug/netcoreapp3.1
+/SoftSunlight.RedisClient.Test/obj
