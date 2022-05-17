@@ -12,7 +12,13 @@ namespace CompareWidthCsRedis
         {
             //Stopwatch stopwatch = new Stopwatch();
             //stopwatch.Start();
-            //SsRedisClient ssRedisClient = new SsRedisClient("192.168.10.131:6379");
+            SsRedisClient ssRedisClient = new SsRedisClient("192.168.10.131:6379");
+            ssRedisClient.Subscribe("testChannel");
+            ssRedisClient.Subscribed += (e) =>
+            {
+                Console.WriteLine(e.Message);
+            };
+            Console.Read();
             //for (int i = 0; i < 20000; i++)
             //{
             //    ssRedisClient.Append("aa", i.ToString());
@@ -28,7 +34,6 @@ namespace CompareWidthCsRedis
             //stopwatch.Stop();
             //Console.WriteLine(stopwatch.Elapsed.TotalMilliseconds);
         }
-
     }
 
 }
