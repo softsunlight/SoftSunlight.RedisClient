@@ -1,4 +1,5 @@
-﻿using SoftSunlight.RedisClient.Enum;
+﻿using SoftSunlight.RedisClient.Domain;
+using SoftSunlight.RedisClient.Enum;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -291,6 +292,347 @@ namespace SoftSunlight.RedisClient
                 });
             }
         }
+        #endregion
+
+        #region Key Command
+        /// <summary>
+        /// 删除多个key
+        /// </summary>
+        /// <param name="keys"></param>
+        /// <returns>被删除key的数量</returns>
+        public long Del(params string[] keys)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Del;
+            redisCommand.Params = keys;
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 序列化给定key
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns>key存在，返回序列化之后的值，不存在则返回null</returns>
+        public string Dump(string key)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Dump;
+            redisCommand.Params = new object[] { key };
+            return SendCommand<string>(redisCommand);
+        }
+
+        /// <summary>
+        /// 判断key是否存在
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns>1 存在，0 不存在</returns>
+        public long Exists(string key)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Exists;
+            redisCommand.Params = new object[] { key };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 设置key的过期时间(seconds)
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="seconds">秒</param>
+        /// <returns>1：设置成功，0：key不存在</returns>
+        public long Expire(string key, long seconds)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Expire;
+            redisCommand.Params = new object[] { key, seconds };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 设置key的过期时间(timestamp)
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="dateTime">时间，自动转换为unix时间戳</param>
+        /// <returns>1：设置成功，0：key不存在</returns>
+        public long ExpireAt(string key, DateTime dateTime)
+        {
+            //long unixTimeStamp = (dateTime.ToUniversalTime().Ticks - 621355968000000000) / 10000000;
+            long unixTimeStamp = (long)(dateTime - new DateTime(1970, 1, 1, 8, 0, 0)).TotalSeconds;
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ExpireAt;
+            redisCommand.Params = new object[] { key, unixTimeStamp };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 查找匹配指定模式pattern的key
+        /// </summary>
+        /// <param name="pattern"></param>
+        /// <returns></returns>
+        public IList<string> Keys(string pattern)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Keys;
+            redisCommand.Params = new object[] { pattern };
+            return SendCommand<IList<string>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 迁移键到指定的数据库实例中
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="port"></param>
+        /// <param name="key"></param>
+        /// <param name="destinationDb"></param>
+        /// <param name="timeout">超时时间(毫秒)</param>
+        /// <param name="keys"></param>
+        /// <returns></returns>
+        public bool Migrate(string host, int port, string key, int destinationDb, int timeout, params string[] keys)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Migrate;
+            redisCommand.Params = new List<object> { host, port, key, destinationDb, timeout };
+            if (string.IsNullOrEmpty(key) && keys.Length > 0)
+            {
+                redisCommand.Params.Add("keys");
+                foreach (var item in keys)
+                {
+                    redisCommand.Params.Add(item);
+                }
+            }
+            return SendCommand<string>(redisCommand).Equals("OK", StringComparison.OrdinalIgnoreCase) ? true : false;
+        }
+
+        /// <summary>
+        /// 将当前数据的key移动到指定的数据库db当中
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="db">数据库</param>
+        /// <returns>1：key被移动，0：key没有被移动</returns>
+        public long Move(string key, int db)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Move;
+            redisCommand.Params = new object[] { key, db };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 从内部查看给定key的redis对象
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="subCommandOptions"></param>
+        /// <returns></returns>
+        public object Object(string key, SubCommandEnum subCommandOptions)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Object;
+            redisCommand.Params = new object[] { subCommandOptions, key };
+            return SendCommand<object>(redisCommand);
+        }
+
+        /// <summary>
+        /// 删除给定Key的过期时间，使得key永不过期
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns>1：移除过期时间成功，0：key不存在或者没有设置过期时间</returns>
+        public long Persist(string key)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Persist;
+            redisCommand.Params = new object[] { key };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 设置key的过期时间(milliseconds)
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="milliseconds">毫秒</param>
+        /// <returns>1：设置成功，0：key不存在或设置失败</returns>
+        public long PExpire(string key, long milliseconds)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.PExpire;
+            redisCommand.Params = new object[] { key, milliseconds };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 设置key的过期时间(timestamp)
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="dateTime">时间，自动转换为unix时间戳</param>
+        /// <returns>1：设置成功，0：key不存在</returns>
+        public long PExpireAt(string key, DateTime dateTime)
+        {
+            long unixTimeStamp = (dateTime.ToUniversalTime().Ticks - 621355968000000000) / 10000;
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.PExpireAt;
+            redisCommand.Params = new object[] { key, unixTimeStamp };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 以毫秒为单位返回key的剩余过期时间
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns>-2：key不存在，-1：key存在但没有设置剩余生存时间，其他：以毫秒为单位，返回key的剩余生存时间</returns>
+        public long PTtl(string key)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.PTtl;
+            redisCommand.Params = new object[] { key };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 从当前数据库中随机返回一个Key
+        /// </summary>
+        /// <returns>当数据库不为空时，返回一个key，否则返回NULL</returns>
+        public string RandomKey()
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.RandomKey;
+            return SendCommand<string>(redisCommand);
+        }
+
+        /// <summary>
+        /// 修改key的名字为newkey
+        /// </summary>
+        /// <param name="key">旧的key</param>
+        /// <param name="newkey">新的Key</param>
+        /// <returns></returns>
+        public bool Rename(string key, string newkey)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Rename;
+            redisCommand.Params = new object[] { key, newkey };
+            return SendCommand<string>(redisCommand).Equals("OK", StringComparison.OrdinalIgnoreCase) ? true : false;
+        }
+
+        /// <summary>
+        /// 在新的key不存在时修改key的名称，若key不存在返回错误
+        /// 在集群模式下，key和newkey必须在同一个哈希槽才能重命名
+        /// </summary>
+        /// <param name="key">旧的key</param>
+        /// <param name="newkey">新的Key</param>
+        /// <returns>1：成功，0：newkey已经存在</returns>
+        public long RenameNx(string key, string newkey)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.RenameNx;
+            redisCommand.Params = new object[] { key, newkey };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 反序列化Dump生成的值，并关联指定的key
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="ttl">过期时间(毫秒)</param>
+        /// <param name="serializedValue"></param>
+        /// <returns></returns>
+        public bool Restore(string key, long ttl, string serializedValue)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Restore;
+            redisCommand.Params = new object[] { key, ttl, serializedValue };
+            return SendCommand<string>(redisCommand).Equals("OK", StringComparison.OrdinalIgnoreCase) ? true : false;
+        }
+
+        /// <summary>
+        /// 迭代当前数据库中的键
+        /// </summary>
+        /// <param name="cursor"></param>
+        /// <returns></returns>
+        public object Scan(int cursor)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Scan;
+            redisCommand.Params = new object[] { cursor };
+            return SendCommand<object>(redisCommand);
+        }
+
+        /// <summary>
+        /// 排序
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public IList<string> Sort(string key)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Sort;
+            redisCommand.Params = new object[] { key };
+            return SendCommand<IList<string>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 修改指定key的最后访问时间，忽略不存在的key
+        /// </summary>
+        /// <param name="keys"></param>
+        /// <returns>被更新的Key个数</returns>
+        public long Touch(params string[] keys)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Touch;
+            redisCommand.Params = keys;
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 以秒为单位返回key的剩余过期时间
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns>剩余超时秒数，-2：key不存在，-1：key存在但没有管理超时时间</returns>
+        public long Ttl(string key)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Ttl;
+            redisCommand.Params = new object[] { key };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 以字符串的形式返回存储在key中的值的类型
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns>返回key的类型，key不存在时返回null</returns>
+        public string Type(string key)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Type;
+            redisCommand.Params = new object[] { key };
+            return SendCommand<string>(redisCommand);
+        }
+
+        /// <summary>
+        /// 删除指定的key，与Del不同的是，该命令执行实际的内存回收，因此是非阻塞的，而Del是阻塞的，将键与键空间断开连接，实际的删除将稍后异步进行
+        /// </summary>
+        /// <param name="keys"></param>
+        /// <returns>断开连接Key的个数</returns>
+        public long Unlink(params string[] keys)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Unlink;
+            redisCommand.Params = keys;
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 阻塞当前客户端，直到所有先前的写入命令成功传输并且至少由指定数量的从节点复制完成
+        /// </summary>
+        /// <param name="numReplicas">从节点数量</param>
+        /// <param name="timeout">超时时间</param>
+        /// <returns>接收写操作的从节点数量</returns>
+        public long Wait(int numReplicas, long timeout)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Wait;
+            redisCommand.Params = new object[] { numReplicas, timeout };
+            return SendCommand<long>(redisCommand);
+        }
+
         #endregion
 
         #region String Command
@@ -1248,6 +1590,729 @@ namespace SoftSunlight.RedisClient
 
         #endregion
 
+        #region Set Command
+        /// <summary>
+        /// 将一个或多个成员加入到集合，已经存在的就忽略
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="members"></param>
+        /// <returns>返回新成功添加到集合里元素的数量</returns>
+        public long SAdd(string key, params object[] members)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SAdd;
+            redisCommand.Params = new object[] { key, members };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 返回集合中元素的数量
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns>集合元素的数量</returns>
+        public long SCard(string key)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SCard;
+            redisCommand.Params = new object[] { key };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 返回第一个集合与其他集合之间的差异，也可以说是第一个集合中独有的元素
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="keys"></param>
+        /// <returns>集合元素的数量</returns>
+        public IList<object> SDiff(string key, params string[] keys)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SDiff;
+            redisCommand.Params = new object[] { key, keys };
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 和SDiff类似，不同的是它将结果保存到destination集合
+        /// </summary>
+        /// <param name="destination"></param>
+        /// <param name="key"></param>
+        /// <param name="keys"></param>
+        /// <returns>集合元素的数量</returns>
+        public long SDiffStore(string destination, string key, params string[] keys)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SDiffStore;
+            redisCommand.Params = new object[] { destination, key, keys };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 返回所有给定集合的成员交集
+        /// </summary>
+        /// <param name="keys"></param>
+        /// <returns>集合元素的数量</returns>
+        public IList<object> SInter(params string[] keys)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SInter;
+            redisCommand.Params = new object[] { keys };
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 与SInter命令类似，不同的是他将结果保存到destination集合中
+        /// </summary>
+        /// <param name="keys"></param>
+        /// <returns>集合元素的数量</returns>
+        public long SInterStore(string destination, params string[] keys)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SInterStore;
+            redisCommand.Params = new object[] { destination, keys };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 判断元素是否是集合的成员
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="member"></param>
+        /// <returns>1：是集合的成员，0：不是或者key不存在</returns>
+        public long SIsMember(string key, object member)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SIsMember;
+            redisCommand.Params = new object[] { key, member };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 返回存储在key中的集合的所有成员
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns>集合中的所有成员</returns>
+        public IList<object> SMembers(string key)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SMembers;
+            redisCommand.Params = new object[] { key };
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>检查给定的member是不是特定集合的成员
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns>按命令助攻member出现的顺序，返回是否是集合成员的判断</returns>
+        public IList<object> SMIsMember(string key, params object[] members)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SMIsMember;
+            redisCommand.Params = new object[] { key, members };
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 从集合source中移动成员member到集合destination
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="destination"></param>
+        /// <param name="member"></param>
+        /// <returns>1：成功，0：要移动的元素不是source的成员，什么也不执行</returns>
+        public long SMove(string source, string destination, object member)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SMove;
+            redisCommand.Params = new object[] { source, destination, member };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 从集合中删除并返回一个随机元素
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public string SPop(string key)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SPop;
+            redisCommand.Params = new object[] { key };
+            return SendCommand<string>(redisCommand);
+        }
+
+        /// <summary>
+        /// 从集合中删除并返回count个随机元素
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public string SPop(string key, int count)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SPop;
+            redisCommand.Params = new object[] { key, count };
+            return SendCommand<string>(redisCommand);
+        }
+
+        /// <summary>
+        /// 随机返回集合key中的一个随机元素
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public string SRandMember(string key)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SRandMember;
+            redisCommand.Params = new object[] { key };
+            return SendCommand<string>(redisCommand);
+        }
+
+        /// <summary>
+        /// 从集合中返回count个随机元素
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public string SRandMember(string key, int count)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SRandMember;
+            redisCommand.Params = new object[] { key, count };
+            return SendCommand<string>(redisCommand);
+        }
+
+        /// <summary>
+        /// 删除集合中指定的元素
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="members"></param>
+        /// <returns>被删除元素的个数，不含不存在的元素</returns>
+        public long SRem(string key, params object[] members)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SRem;
+            redisCommand.Params = new object[] { key, members };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 遍历集合中的元素
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="cursor"></param>
+        /// <returns></returns>
+        public IList<object> SScan(string key, int cursor)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SScan;
+            redisCommand.Params = new object[] { key, cursor };
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 遍历集合中的元素
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="cursor"></param>
+        /// <param name="pattern"></param>
+        /// <returns></returns>
+        public IList<object> SScan(string key, int cursor, string pattern)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SScan;
+            redisCommand.Params = new object[] { key, cursor, "MATCH", pattern };
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 遍历集合中的元素
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="cursor"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public IList<object> SScan(string key, int cursor, int count)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SScan;
+            redisCommand.Params = new object[] { key, cursor, "COUNT", count };
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 遍历集合中的元素
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="cursor"></param>
+        /// <param name="pattern"></param>
+        /// <returns></returns>
+        public IList<object> SScan(string key, int cursor, string pattern, int count)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SScan;
+            redisCommand.Params = new object[] { key, cursor, "MATCH", pattern, "COUNT", count };
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 返回所有给定集合的并集
+        /// </summary>
+        /// <param name="keys"></param>
+        /// <returns></returns>
+        public IList<object> SUnion(params string[] keys)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SUnion;
+            redisCommand.Params = new object[] { keys };
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 将所有给定集合的并集存储到destination中
+        /// </summary>
+        /// <param name="destination"></param>
+        /// <param name="keys"></param>
+        /// <returns></returns>
+        public long SUnionStore(string destination, params string[] keys)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SUnionStore;
+            redisCommand.Params = new object[] { destination, keys };
+            return SendCommand<long>(redisCommand);
+        }
+        #endregion
+
+        #region SortedSet Command
+        /// <summary>
+        /// 添加有序集合
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="sortedSetItems"></param>
+        /// <returns></returns>
+        public long ZAdd(string key, IList<SortedSetItem> sortedSetItems)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZAdd;
+            redisCommand.Params = new List<object> { key };
+            if (sortedSetItems != null)
+            {
+                foreach (var item in sortedSetItems)
+                {
+                    redisCommand.Params.Add(item.Score);
+                    redisCommand.Params.Add(item.Member);
+                }
+            }
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 返回有序集的成员个数
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public long ZCard(string key)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZCard;
+            redisCommand.Params = new List<object> { key };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 返回有序集合中score在min和max之间的成员的数量
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <returns></returns>
+        public long ZCount(string key, double min, double max)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZCount;
+            redisCommand.Params = new List<object> { key, min, max };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 为成员member的score值加上增量increment，increment为负数则减去
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="increment"></param>
+        /// <param name="member"></param>
+        /// <returns>返回新的score值</returns>
+        public string ZIncrBy(string key, double increment, object member)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZIncrBy;
+            redisCommand.Params = new List<object> { key, increment, member };
+            return SendCommand<string>(redisCommand);
+        }
+
+        /// <summary>
+        /// 返回集合的交集
+        /// </summary>
+        /// <param name="numKeys"></param>
+        /// <param name="keys"></param>
+        /// <returns></returns>
+        public IList<object> ZInter(int numKeys, params string[] keys)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZInter;
+            redisCommand.Params = new List<object> { numKeys, keys };
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 计算numKeys个有序集合的交集，并且把结果放到destination中
+        /// </summary>
+        /// <param name="destination"></param>
+        /// <param name="numKeys"></param>
+        /// <param name="keys"></param>
+        /// <returns>结果集destination中元素个数</returns>
+        public long ZInterStore(string destination, int numKeys, params string[] keys)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZInterStore;
+            redisCommand.Params = new List<object> { numKeys, keys };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 返回有序集中值在min和max之间的成员个数
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <returns></returns>
+        public long ZLexCount(string key, double min, double max)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZLexCount;
+            redisCommand.Params = new List<object> { key, min, max };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 返回有序集中指定成员的members的scores
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="members"></param>
+        /// <returns></returns>
+        public IList<object> ZMScore(string key, params object[] members)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZMScore;
+            redisCommand.Params = new List<object> { key, members };
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 删除并返回最多count个有序集合中的最高得分的成员
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public IList<object> ZPopMax(string key)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZPopMax;
+            redisCommand.Params = new List<object> { key };
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 删除并返回最多count个有序集合中的最高得分的成员
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public IList<object> ZPopMax(string key, int count)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZPopMax;
+            redisCommand.Params = new List<object> { key, count };
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 删除并返回最多count个有序集合中的最低得分的成员
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public IList<object> ZPopMin(string key)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZPopMin;
+            redisCommand.Params = new List<object> { key };
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 删除并返回最多count个有序集合中的最低得分的成员
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public IList<object> ZPopMin(string key, int count)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZPopMin;
+            redisCommand.Params = new List<object> { key, count };
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 返回指定区间的成员，成员按分数值递增排序
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <param name="withScores"></param>
+        /// <returns></returns>
+        public IList<object> ZRange(string key, int start, int end, bool withScores = false)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZRange;
+            redisCommand.Params = new List<object> { key, start, end };
+            if (withScores)
+            {
+                redisCommand.Params.Add("WITHSCORES");
+            }
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <returns></returns>
+        public IList<object> ZRangeByLex(string key, double min, double max)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZRangeByLex;
+            redisCommand.Params = new List<object> { key, min, max };
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 返回有序集中所有score值介于min和max(包括等于min或max)之间的成员，有序集成员按score值递增
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <returns></returns>
+        public IList<object> ZRangeByScore(string key, double min, double max, bool withScores = false)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZRangeByScore;
+            redisCommand.Params = new List<object> { key, min, max };
+            if (withScores)
+            {
+                redisCommand.Params.Add("WITHSCORES");
+            }
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 返回有序集中成员的排名,成员按score值从低到高
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="member"></param>
+        /// <returns></returns>
+        public object ZRank(string key, object member)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZRank;
+            redisCommand.Params = new List<object> { key, member };
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 从有序集合key中删除指定的成员member
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="members"></param>
+        /// <returns></returns>
+        public long ZRem(string key, params object[] members)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZRem;
+            redisCommand.Params = new List<object> { key, members };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 删除成员名称按字典由低到高排序介于min和max之间的所有成员
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <returns></returns>
+        public long ZRemRangeByLex(string key, double min, double max)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZRemRangeByLex;
+            redisCommand.Params = new List<object> { key, min, max };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 移除有序集中指定排名区间的所有成员
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <returns></returns>
+        public long ZRemRangeByRank(string key, int start, int end)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZRemRangeByRank;
+            redisCommand.Params = new List<object> { key, start, end };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 移除有序集中所有score值介于min和max之间的成员
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <returns></returns>
+        public long ZRemRangeByRank(string key, double min, double max)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZRemRangeByRank;
+            redisCommand.Params = new List<object> { key, min, max };
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 返回有序集中指定区间内的成员，成员按score值递减
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <param name="withScores"></param>
+        /// <returns></returns>
+        public IList<object> ZRevRange(string key, int start, int end, bool withScores = false)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZRevRange;
+            redisCommand.Params = new List<object> { key, start, end };
+            if (withScores)
+            {
+                redisCommand.Params.Add("WITHSCORES");
+            }
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 当以相同的分数插入排序集中的所有元素时，为了强制按字典顺序排序，返回排序集中key值介于max和min之间的成员
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="max"></param>
+        /// <param name="min"></param>
+        /// <returns></returns>
+        public IList<object> ZRevRangeByLex(string key, string max, string min)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZRevRangeByLex;
+            redisCommand.Params = new List<object> { key, max, min };
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 当以相同的分数插入排序集中的所有元素时，为了强制按字典顺序排序，返回排序集中score值介于max和min之间的成员
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="max"></param>
+        /// <param name="min"></param>
+        /// <returns></returns>
+        public IList<object> ZRevRangeByScore(string key, double max, double min, bool withScores = false)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZRevRangeByScore;
+            redisCommand.Params = new List<object> { key, max, min };
+            if (withScores)
+            {
+                redisCommand.Params.Add("WITHSCORES");
+            }
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 返回有序集中成员member的排名，有序集成员按score值从高到低排列
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="member"></param>
+        /// <returns></returns>
+        public object ZRevRank(string key, object member)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZRevRank;
+            redisCommand.Params = new List<object> { key, member };
+            return SendCommand<object>(redisCommand);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="cursor"></param>
+        /// <returns></returns>
+        public IList<object> ZScan(string key, int cursor)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZScan;
+            redisCommand.Params = new List<object> { key, cursor };
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 返回有序集中成员的分数
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="member"></param>
+        /// <returns></returns>
+        public string ZScore(string key, object member)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZScore;
+            redisCommand.Params = new List<object> { key, member };
+            return SendCommand<string>(redisCommand);
+        }
+
+        /// <summary>
+        /// 返回集合的并集
+        /// </summary>
+        /// <param name="numKeys"></param>
+        /// <param name="keys"></param>
+        /// <returns></returns>
+        public IList<object> ZUnion(int numKeys, params string[] keys)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZUnion;
+            redisCommand.Params = new List<object> { numKeys, keys };
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 计算给定numKeys个有序集合的并集，并把结果保存到destination中
+        /// </summary>
+        /// <param name="destination"></param>
+        /// <param name="nunKeys"></param>
+        /// <param name="keys"></param>
+        /// <returns></returns>
+        public long ZUnionStore(string destination, int numKeys, params string[] keys)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ZUnionStore;
+            redisCommand.Params = new List<object> { destination, numKeys, keys };
+            return SendCommand<long>(redisCommand);
+        }
+        #endregion
+
         #region Pub/Sub
         /// <summary>
         /// 订阅一个或者多个符合给定模式的频道
@@ -1324,352 +2389,60 @@ namespace SoftSunlight.RedisClient
 
         #endregion
 
-        #region Key Command
+        #region Transaction Command
         /// <summary>
-        /// 删除多个key
+        /// 取消事务
         /// </summary>
-        /// <param name="keys"></param>
-        /// <returns>被删除key的数量</returns>
-        public long Del(params string[] keys)
-        {
-            RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.Del;
-            redisCommand.Params = keys;
-            return SendCommand<long>(redisCommand);
-        }
-
-        /// <summary>
-        /// 序列化给定key
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns>key存在，返回序列化之后的值，不存在则返回null</returns>
-        public string Dump(string key)
-        {
-            RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.Dump;
-            redisCommand.Params = new object[] { key };
-            return SendCommand<string>(redisCommand);
-        }
-
-        /// <summary>
-        /// 判断key是否存在
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns>1 存在，0 不存在</returns>
-        public long Exists(string key)
-        {
-            RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.Exists;
-            redisCommand.Params = new object[] { key };
-            return SendCommand<long>(redisCommand);
-        }
-
-        /// <summary>
-        /// 设置key的过期时间(seconds)
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="seconds">秒</param>
-        /// <returns>1：设置成功，0：key不存在</returns>
-        public long Expire(string key, long seconds)
-        {
-            RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.Expire;
-            redisCommand.Params = new object[] { key, seconds };
-            return SendCommand<long>(redisCommand);
-        }
-
-        /// <summary>
-        /// 设置key的过期时间(timestamp)
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="dateTime">时间，自动转换为unix时间戳</param>
-        /// <returns>1：设置成功，0：key不存在</returns>
-        public long ExpireAt(string key, DateTime dateTime)
-        {
-            //long unixTimeStamp = (dateTime.ToUniversalTime().Ticks - 621355968000000000) / 10000000;
-            long unixTimeStamp = (long)(dateTime - new DateTime(1970, 1, 1, 8, 0, 0)).TotalSeconds;
-            RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.ExpireAt;
-            redisCommand.Params = new object[] { key, unixTimeStamp };
-            return SendCommand<long>(redisCommand);
-        }
-
-        /// <summary>
-        /// 查找匹配指定模式pattern的key
-        /// </summary>
-        /// <param name="pattern"></param>
         /// <returns></returns>
-        public IList<string> Keys(string pattern)
+        public bool Discard()
         {
             RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.Keys;
-            redisCommand.Params = new object[] { pattern };
-            return SendCommand<IList<string>>(redisCommand);
-        }
-
-        /// <summary>
-        /// 迁移键到指定的数据库实例中
-        /// </summary>
-        /// <param name="host"></param>
-        /// <param name="port"></param>
-        /// <param name="key"></param>
-        /// <param name="destinationDb"></param>
-        /// <param name="timeout">超时时间(毫秒)</param>
-        /// <param name="keys"></param>
-        /// <returns></returns>
-        public bool Migrate(string host, int port, string key, int destinationDb, int timeout, params string[] keys)
-        {
-            RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.Migrate;
-            redisCommand.Params = new List<object> { host, port, key, destinationDb, timeout };
-            if (string.IsNullOrEmpty(key) && keys.Length > 0)
-            {
-                redisCommand.Params.Add("keys");
-                foreach (var item in keys)
-                {
-                    redisCommand.Params.Add(item);
-                }
-            }
+            redisCommand.RedisCommands = RedisCommandEnum.Discard;
             return SendCommand<string>(redisCommand).Equals("OK", StringComparison.OrdinalIgnoreCase) ? true : false;
         }
 
         /// <summary>
-        /// 将当前数据的key移动到指定的数据库db当中
+        /// 执行事务队列内的所有命令
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="db">数据库</param>
-        /// <returns>1：key被移动，0：key没有被移动</returns>
-        public long Move(string key, int db)
-        {
-            RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.Move;
-            redisCommand.Params = new object[] { key, db };
-            return SendCommand<long>(redisCommand);
-        }
-
-        /// <summary>
-        /// 从内部查看给定key的redis对象
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="subCommandOptions"></param>
         /// <returns></returns>
-        public object Object(string key, SubCommandEnum subCommandOptions)
+        public IList<object> Exec()
         {
             RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.Object;
-            redisCommand.Params = new object[] { subCommandOptions, key };
-            return SendCommand<object>(redisCommand);
+            redisCommand.RedisCommands = RedisCommandEnum.Exec;
+            return SendCommand<IList<object>>(redisCommand);
         }
 
         /// <summary>
-        /// 删除给定Key的过期时间，使得key永不过期
+        /// 开启事务
         /// </summary>
-        /// <param name="key"></param>
-        /// <returns>1：移除过期时间成功，0：key不存在或者没有设置过期时间</returns>
-        public long Persist(string key)
-        {
-            RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.Persist;
-            redisCommand.Params = new object[] { key };
-            return SendCommand<long>(redisCommand);
-        }
-
-        /// <summary>
-        /// 设置key的过期时间(milliseconds)
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="milliseconds">毫秒</param>
-        /// <returns>1：设置成功，0：key不存在或设置失败</returns>
-        public long PExpire(string key, long milliseconds)
-        {
-            RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.PExpire;
-            redisCommand.Params = new object[] { key, milliseconds };
-            return SendCommand<long>(redisCommand);
-        }
-
-        /// <summary>
-        /// 设置key的过期时间(timestamp)
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="dateTime">时间，自动转换为unix时间戳</param>
-        /// <returns>1：设置成功，0：key不存在</returns>
-        public long PExpireAt(string key, DateTime dateTime)
-        {
-            long unixTimeStamp = (dateTime.ToUniversalTime().Ticks - 621355968000000000) / 10000;
-            RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.PExpireAt;
-            redisCommand.Params = new object[] { key, unixTimeStamp };
-            return SendCommand<long>(redisCommand);
-        }
-
-        /// <summary>
-        /// 以毫秒为单位返回key的剩余过期时间
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns>-2：key不存在，-1：key存在但没有设置剩余生存时间，其他：以毫秒为单位，返回key的剩余生存时间</returns>
-        public long PTtl(string key)
-        {
-            RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.PTtl;
-            redisCommand.Params = new object[] { key };
-            return SendCommand<long>(redisCommand);
-        }
-
-        /// <summary>
-        /// 从当前数据库中随机返回一个Key
-        /// </summary>
-        /// <returns>当数据库不为空时，返回一个key，否则返回NULL</returns>
-        public string RandomKey()
-        {
-            RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.RandomKey;
-            return SendCommand<string>(redisCommand);
-        }
-
-        /// <summary>
-        /// 修改key的名字为newkey
-        /// </summary>
-        /// <param name="key">旧的key</param>
-        /// <param name="newkey">新的Key</param>
         /// <returns></returns>
-        public bool Rename(string key, string newkey)
+        public bool Multi()
         {
             RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.Rename;
-            redisCommand.Params = new object[] { key, newkey };
+            redisCommand.RedisCommands = RedisCommandEnum.Multi;
             return SendCommand<string>(redisCommand).Equals("OK", StringComparison.OrdinalIgnoreCase) ? true : false;
         }
 
         /// <summary>
-        /// 在新的key不存在时修改key的名称，若key不存在返回错误
-        /// 在集群模式下，key和newkey必须在同一个哈希槽才能重命名
+        /// 取消对所有Key的监视
         /// </summary>
-        /// <param name="key">旧的key</param>
-        /// <param name="newkey">新的Key</param>
-        /// <returns>1：成功，0：newkey已经存在</returns>
-        public long RenameNx(string key, string newkey)
-        {
-            RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.RenameNx;
-            redisCommand.Params = new object[] { key, newkey };
-            return SendCommand<long>(redisCommand);
-        }
-
-        /// <summary>
-        /// 反序列化Dump生成的值，并关联指定的key
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="ttl">过期时间(毫秒)</param>
-        /// <param name="serializedValue"></param>
         /// <returns></returns>
-        public bool Restore(string key, long ttl, string serializedValue)
+        public bool UnWatch()
         {
             RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.Restore;
-            redisCommand.Params = new object[] { key, ttl, serializedValue };
+            redisCommand.RedisCommands = RedisCommandEnum.UnWatch;
             return SendCommand<string>(redisCommand).Equals("OK", StringComparison.OrdinalIgnoreCase) ? true : false;
         }
 
         /// <summary>
-        /// 迭代当前数据库中的键
+        /// 标记要监视的Keys,以便有条件的执行事务，一旦有键被修改或删除，之后的事务就不会执行
         /// </summary>
-        /// <param name="cursor"></param>
         /// <returns></returns>
-        public object Scan(int cursor)
+        public bool Watch(params string[] keys)
         {
             RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.Scan;
-            redisCommand.Params = new object[] { cursor };
-            return SendCommand<object>(redisCommand);
-        }
-
-        /// <summary>
-        /// 排序
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public IList<string> Sort(string key)
-        {
-            RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.Sort;
-            redisCommand.Params = new object[] { key };
-            return SendCommand<IList<string>>(redisCommand);
-        }
-
-        /// <summary>
-        /// 修改指定key的最后访问时间，忽略不存在的key
-        /// </summary>
-        /// <param name="keys"></param>
-        /// <returns>被更新的Key个数</returns>
-        public long Touch(params string[] keys)
-        {
-            RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.Touch;
-            redisCommand.Params = keys;
-            return SendCommand<long>(redisCommand);
-        }
-
-        /// <summary>
-        /// 以秒为单位返回key的剩余过期时间
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns>剩余超时秒数，-2：key不存在，-1：key存在但没有管理超时时间</returns>
-        public long Ttl(string key)
-        {
-            RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.Ttl;
-            redisCommand.Params = new object[] { key };
-            return SendCommand<long>(redisCommand);
-        }
-
-        /// <summary>
-        /// 以字符串的形式返回存储在key中的值的类型
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns>返回key的类型，key不存在时返回null</returns>
-        public string Type(string key)
-        {
-            RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.Type;
-            redisCommand.Params = new object[] { key };
-            return SendCommand<string>(redisCommand);
-        }
-
-        /// <summary>
-        /// 删除指定的key，与Del不同的是，该命令执行实际的内存回收，因此是非阻塞的，而Del是阻塞的，将键与键空间断开连接，实际的删除将稍后异步进行
-        /// </summary>
-        /// <param name="keys"></param>
-        /// <returns>断开连接Key的个数</returns>
-        public long Unlink(params string[] keys)
-        {
-            RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.Unlink;
-            redisCommand.Params = keys;
-            return SendCommand<long>(redisCommand);
-        }
-
-        /// <summary>
-        /// 阻塞当前客户端，直到所有先前的写入命令成功传输并且至少由指定数量的从节点复制完成
-        /// </summary>
-        /// <param name="numReplicas">从节点数量</param>
-        /// <param name="timeout">超时时间</param>
-        /// <returns>接收写操作的从节点数量</returns>
-        public long Wait(int numReplicas, long timeout)
-        {
-            RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.Wait;
-            redisCommand.Params = new object[] { numReplicas, timeout };
-            return SendCommand<long>(redisCommand);
-        }
-
-        #endregion
-
-        #region Server Command
-        public bool FlushDB()
-        {
-            RedisCommand redisCommand = new RedisCommand();
-            redisCommand.RedisCommands = RedisCommandEnum.FlushDB;
+            redisCommand.RedisCommands = RedisCommandEnum.Watch;
+            redisCommand.Params = new object[] { keys };
             return SendCommand<string>(redisCommand).Equals("OK", StringComparison.OrdinalIgnoreCase) ? true : false;
         }
         #endregion
@@ -1723,6 +2496,82 @@ namespace SoftSunlight.RedisClient
             return SendCommand<string>(redisCommand).Equals("OK", StringComparison.OrdinalIgnoreCase) ? true : false;
         }
 
+        #endregion
+
+        #region Server Command
+        /// <summary>
+        /// 异步执行一个AOF文件重写操作
+        /// </summary>
+        /// <returns></returns>
+        public string BgRewriteAof()
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.BgRewriteAof;
+            return SendCommand<string>(redisCommand);
+        }
+
+        /// <summary>
+        /// 后台保存DB
+        /// </summary>
+        /// <returns></returns>
+        public bool BgSave()
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.BgSave;
+            return SendCommand<string>(redisCommand).Equals("OK", StringComparison.OrdinalIgnoreCase) ? true : false;
+        }
+
+        /// <summary>
+        /// 返回当前数据库中key的数量
+        /// </summary>
+        /// <returns></returns>
+        public long DbSize()
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.DbSize;
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 清空整个redis中的数据(清空所有数据库中所有key)
+        /// </summary>
+        /// <param name="async">是否异步操作</param>
+        /// <returns></returns>
+        public bool FlushAll(bool async = false)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.FlushAll;
+            if (async)
+            {
+                redisCommand.Params = new object[] { async };
+            }
+            return SendCommand<string>(redisCommand).Equals("OK", StringComparison.OrdinalIgnoreCase) ? true : false;
+        }
+
+        /// <summary>
+        /// 清空当前select数据库中所有key
+        /// </summary>
+        /// <param name="async"></param>
+        /// <returns></returns>
+        public bool FlushDB(bool async = false)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.FlushDB;
+            if (async)
+            {
+                redisCommand.Params = new object[] { async };
+            }
+            return SendCommand<string>(redisCommand).Equals("OK", StringComparison.OrdinalIgnoreCase) ? true : false;
+        }
+
+        /// <summary>
+        /// 返回redis服务器的各种信息和统计数值  
+        /// </summary>
+        /// <returns></returns>
+        //public string Info()
+        //{
+
+        //}
         #endregion
 
         /// <summary>

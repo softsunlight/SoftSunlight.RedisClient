@@ -104,6 +104,54 @@ namespace SoftSunlight.RedisClient.Enum
         RPushX,
         #endregion
 
+        #region Set
+        SAdd,
+        SCard,
+        SDiff,
+        SDiffStore,
+        SInter,
+        SInterStore,
+        SIsMember,
+        SMembers,
+        SMIsMember,
+        SMove,
+        SPop,
+        SRandMember,
+        SRem,
+        SScan,
+        SUnion,
+        SUnionStore,
+        #endregion
+
+        #region SortedSet
+        ZAdd,
+        ZCard,
+        ZCount,
+        ZIncrBy,
+        ZInter,
+        ZInterStore,
+        ZLexCount,
+        ZMScore,
+        ZPopMax,
+        ZPopMin,
+        ZRange,
+        ZRangeByLex,
+        ZRangeByScore,
+        ZRank,
+        ZRem,
+        ZRemRangeByLex,
+        ZRemRangeByRank,
+        ZRemRangeByScore,
+        ZRevRange,
+        ZRevRangeByLex,
+        ZRevRangeByScore,
+        ZRevRank,
+        ZScan,
+        ZScore,
+        ZUnion,
+        ZUnionStore,
+        #endregion
+
         #region Pub/Sub
         PSubscribe,
         Publish,
@@ -111,6 +159,14 @@ namespace SoftSunlight.RedisClient.Enum
         PUnSubscribe,
         Subscribe,
         UnSubscribe,
+        #endregion
+
+        #region Transcation
+        Discard,
+        Exec,
+        Multi,
+        UnWatch,
+        Watch,
         #endregion
 
         #region Connection
@@ -122,7 +178,26 @@ namespace SoftSunlight.RedisClient.Enum
         #endregion
 
         #region Server
+        BgRewriteAof,
+        BgSave,
+        Command,
+        DbSize,
+        FlushAll,
         FlushDB,
+        Info,
+        LastSave,
+        Lolwut,
+        Monitor,
+        PSync,
+        ReplicAof,
+        Role,
+        Save,
+        ShutDown,
+        SlaveOf,
+        SlowLog,
+        SwapDb,
+        Sync,
+        Time
         #endregion
     }
 }
