@@ -2313,7 +2313,7 @@ namespace SoftSunlight.RedisClient
         }
         #endregion
 
-        #region Pub/Sub
+        #region Pub/Sub Command
         /// <summary>
         /// 订阅一个或者多个符合给定模式的频道
         /// </summary>
@@ -2568,10 +2568,85 @@ namespace SoftSunlight.RedisClient
         /// 返回redis服务器的各种信息和统计数值  
         /// </summary>
         /// <returns></returns>
-        //public string Info()
-        //{
+        public string Info()
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Info;
+            return SendCommand<string>(redisCommand);
+        }
 
-        //}
+        /// <summary>
+        /// 以unix时间戳格式返回最近一次redis成功将数据保存到磁盘上的时间
+        /// </summary>
+        /// <returns></returns>
+        public long LastSave()
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.LastSave;
+            return SendCommand<long>(redisCommand);
+        }
+
+        /// <summary>
+        /// 在线修改当前服务器的复制设置
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="port"></param>
+        /// <returns></returns>
+        public string ReplicAof(string host, int port)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.ReplicAof;
+            redisCommand.Params = new object[] { host, port };
+            return SendCommand<string>(redisCommand);
+        }
+
+        /// <summary>
+        /// 返回实例在复制中担任的角色,master|slave|sentinel
+        /// </summary>
+        /// <returns></returns>
+        public IList<object> Role()
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Role;
+            return SendCommand<IList<object>>(redisCommand);
+        }
+
+        /// <summary>
+        /// 同步执行保存操作
+        /// </summary>
+        /// <returns></returns>
+        public bool Save()
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Save;
+            return SendCommand<string>(redisCommand).Equals("OK", StringComparison.OrdinalIgnoreCase) ? true : false;
+        }
+
+        /// <summary>
+        /// 将当前服务器转变为指定服务器的从服务器
+        /// </summary>
+        /// <returns></returns>
+        public bool SlaveOf(string host, int port)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SlaveOf;
+            redisCommand.Params = new object[] { host, port };
+            return SendCommand<string>(redisCommand).Equals("OK", StringComparison.OrdinalIgnoreCase) ? true : false;
+        }
+
+        /// <summary>
+        /// 交换两个数据库，命令执行后，连接到某一数据库的客户端可以立刻看到另一个数据库的数据
+        /// </summary>
+        /// <param name="index1"></param>
+        /// <param name="index2"></param>
+        /// <returns></returns>
+        public bool SwapDb(int index1, int index2)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.SwapDb;
+            redisCommand.Params = new object[] { index1, index2 };
+            return SendCommand<string>(redisCommand).Equals("OK", StringComparison.OrdinalIgnoreCase) ? true : false;
+        }
         #endregion
 
         /// <summary>
