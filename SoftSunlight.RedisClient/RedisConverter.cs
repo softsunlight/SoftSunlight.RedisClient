@@ -19,7 +19,20 @@ namespace SoftSunlight.RedisClient
         {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.Append("*").Append(1 + (redisCommand.Params != null ? redisCommand.Params.Count : 0)).Append("\r\n");
-            stringBuilder.Append("$").Append(redisCommand.RedisCommands.ToString().Length).Append("\r\n").Append(redisCommand.RedisCommands.ToString()).Append("\r\n");
+            string cmdName = "";
+            if (redisCommand.RedisCommands == Enum.RedisCommandEnum.BFAdd)
+            {
+                cmdName = "BF.Add";
+            }
+            else if (redisCommand.RedisCommands == Enum.RedisCommandEnum.BFExists)
+            {
+                cmdName = "BF.Exists";
+            }
+            else
+            {
+                cmdName = redisCommand.RedisCommands.ToString();
+            }
+            stringBuilder.Append("$").Append(cmdName.Length).Append("\r\n").Append(cmdName).Append("\r\n");
             if (redisCommand.Params != null && redisCommand.Params.Count > 0)
             {
                 foreach (var item in redisCommand.Params)

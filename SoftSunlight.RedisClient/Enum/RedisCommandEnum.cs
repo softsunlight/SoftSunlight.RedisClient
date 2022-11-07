@@ -197,7 +197,12 @@ namespace SoftSunlight.RedisClient.Enum
         SlowLog,
         SwapDb,
         Sync,
-        Time
+        Time,
+        #endregion
+
+        #region Bloom Filter
+        BFAdd,
+        BFExists,
         #endregion
     }
 }

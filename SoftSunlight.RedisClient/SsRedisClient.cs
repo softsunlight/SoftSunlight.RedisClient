@@ -2649,6 +2649,36 @@ namespace SoftSunlight.RedisClient
         }
         #endregion
 
+        #region Bloom Filter Command
+        /// <summary>
+        /// Create a new bloom filter by adding a new item
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public bool BFAdd(string key, object item)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.BFAdd;
+            redisCommand.Params = new object[] { key, item };
+            return SendCommand<long>(redisCommand) == 1 ? true : false;
+        }
+
+        /// <summary>
+        /// Find out whether an item exists in the filter
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public bool BFExists(string key, object item)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.BFExists;
+            redisCommand.Params = new object[] { key, item };
+            return SendCommand<long>(redisCommand) == 1 ? true : false;
+        }
+        #endregion
+
         /// <summary>
         /// Pipelining(批量发送)
         /// </summary>
