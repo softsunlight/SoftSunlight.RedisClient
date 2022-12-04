@@ -10,3 +10,5 @@
 /SoftSunlight.RedisClient.Test/obj
 /.vs/SoftSunlight.RedisClient
 /.vs/ProjectEvaluation
+/SoftSunlight.RedisClient.Test/bin/Release/netcoreapp3.1
+/SoftSunlight.RedisClient/bin/Release/netstandard2.0

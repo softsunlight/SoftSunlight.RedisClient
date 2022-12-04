@@ -1455,7 +1455,11 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.LPush;
-            redisCommand.Params = new object[] { key, elements };
+            redisCommand.Params = new List<object> { key };
+            foreach (var element in elements)
+            {
+                redisCommand.Params.Add(element);
+            }
             return SendCommand<long>(redisCommand);
         }
 
