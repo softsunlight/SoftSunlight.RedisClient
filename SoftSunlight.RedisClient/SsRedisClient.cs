@@ -861,7 +861,7 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.MGet;
-            redisCommand.Params = new List<object> { keys };
+            redisCommand.Params = keys;
             return SendCommand<IList<string>>(redisCommand);
         }
 
@@ -1093,7 +1093,14 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.HDel;
-            redisCommand.Params = new object[] { key, fields };
+            redisCommand.Params = new object[] { key };
+            if (fields != null && fields.Length > 0)
+            {
+                foreach (var item in fields)
+                {
+                    redisCommand.Params.Add(item);
+                }
+            }
             return SendCommand<long>(redisCommand);
         }
 
@@ -1204,7 +1211,14 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.HMGet;
-            redisCommand.Params = new object[] { key, fields };
+            redisCommand.Params = new object[] { key };
+            if (fields != null && fields.Length > 0)
+            {
+                foreach (var item in fields)
+                {
+                    redisCommand.Params.Add(item);
+                }
+            }
             return SendCommand<IList<object>>(redisCommand);
         }
 
@@ -1326,7 +1340,14 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.BLPop;
-            redisCommand.Params = new object[] { keys, timeout };
+            if (keys != null && keys.Length > 0)
+            {
+                foreach (var item in keys)
+                {
+                    redisCommand.Params.Add(item);
+                }
+                redisCommand.Params.Add(timeout);
+            }
             return SendCommand<IList<object>>(redisCommand);
         }
 
@@ -1340,7 +1361,14 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.BRPop;
-            redisCommand.Params = new object[] { keys, timeout };
+            if (keys != null && keys.Length > 0)
+            {
+                foreach (var item in keys)
+                {
+                    redisCommand.Params.Add(item);
+                }
+                redisCommand.Params.Add(timeout);
+            }
             return SendCommand<IList<object>>(redisCommand);
         }
 
@@ -1473,7 +1501,14 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.LPushX;
-            redisCommand.Params = new object[] { key, elements };
+            redisCommand.Params = new object[] { key };
+            if (elements != null && elements.Length > 0)
+            {
+                foreach (var item in elements)
+                {
+                    redisCommand.Params.Add(item);
+                }
+            }
             return SendCommand<long>(redisCommand);
         }
 
@@ -1574,7 +1609,14 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.RPush;
-            redisCommand.Params = new object[] { key, elements };
+            redisCommand.Params = new object[] { key };
+            if (elements != null && elements.Length > 0)
+            {
+                foreach (var item in elements)
+                {
+                    redisCommand.Params.Add(item);
+                }
+            }
             return SendCommand<long>(redisCommand);
         }
 
@@ -1588,7 +1630,14 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.RPushX;
-            redisCommand.Params = new object[] { key, elements };
+            redisCommand.Params = new object[] { key };
+            if (elements != null && elements.Length > 0)
+            {
+                foreach (var item in elements)
+                {
+                    redisCommand.Params.Add(item);
+                }
+            }
             return SendCommand<long>(redisCommand);
         }
 
@@ -1605,7 +1654,14 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.SAdd;
-            redisCommand.Params = new object[] { key, members };
+            redisCommand.Params = new object[] { key };
+            if (members != null && members.Length > 0)
+            {
+                foreach (var item in members)
+                {
+                    redisCommand.Params.Add(item);
+                }
+            }
             return SendCommand<long>(redisCommand);
         }
 
@@ -1632,7 +1688,14 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.SDiff;
-            redisCommand.Params = new object[] { key, keys };
+            redisCommand.Params = new object[] { key };
+            if (keys != null && keys.Length > 0)
+            {
+                foreach (var item in keys)
+                {
+                    redisCommand.Params.Add(item);
+                }
+            }
             return SendCommand<IList<object>>(redisCommand);
         }
 
@@ -1647,7 +1710,14 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.SDiffStore;
-            redisCommand.Params = new object[] { destination, key, keys };
+            redisCommand.Params = new object[] { destination, key };
+            if (keys != null && keys.Length > 0)
+            {
+                foreach (var item in keys)
+                {
+                    redisCommand.Params.Add(item);
+                }
+            }
             return SendCommand<long>(redisCommand);
         }
 
@@ -1660,7 +1730,7 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.SInter;
-            redisCommand.Params = new object[] { keys };
+            redisCommand.Params = keys;
             return SendCommand<IList<object>>(redisCommand);
         }
 
@@ -1673,7 +1743,14 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.SInterStore;
-            redisCommand.Params = new object[] { destination, keys };
+            redisCommand.Params = new object[] { destination };
+            if (keys != null && keys.Length > 0)
+            {
+                foreach (var item in keys)
+                {
+                    redisCommand.Params.Add(item);
+                }
+            }
             return SendCommand<long>(redisCommand);
         }
 
@@ -1712,7 +1789,14 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.SMIsMember;
-            redisCommand.Params = new object[] { key, members };
+            redisCommand.Params = new object[] { key };
+            if (members != null && members.Length > 0)
+            {
+                foreach (var item in members)
+                {
+                    redisCommand.Params.Add(item);
+                }
+            }
             return SendCommand<IList<object>>(redisCommand);
         }
 
@@ -1795,7 +1879,14 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.SRem;
-            redisCommand.Params = new object[] { key, members };
+            redisCommand.Params = new object[] { key };
+            if (members != null && members.Length > 0)
+            {
+                foreach (var item in members)
+                {
+                    redisCommand.Params.Add(item);
+                }
+            }
             return SendCommand<long>(redisCommand);
         }
 
@@ -1867,7 +1958,7 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.SUnion;
-            redisCommand.Params = new object[] { keys };
+            redisCommand.Params = keys;
             return SendCommand<IList<object>>(redisCommand);
         }
 
@@ -1881,7 +1972,14 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.SUnionStore;
-            redisCommand.Params = new object[] { destination, keys };
+            redisCommand.Params = new object[] { destination };
+            if (keys != null && keys.Length > 0)
+            {
+                foreach (var item in keys)
+                {
+                    redisCommand.Params.Add(item);
+                }
+            }
             return SendCommand<long>(redisCommand);
         }
         #endregion
@@ -1962,7 +2060,14 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.ZInter;
-            redisCommand.Params = new List<object> { numKeys, keys };
+            redisCommand.Params = new List<object> { numKeys };
+            if (keys != null && keys.Length > 0)
+            {
+                foreach (var item in keys)
+                {
+                    redisCommand.Params.Add(item);
+                }
+            }
             return SendCommand<IList<object>>(redisCommand);
         }
 
@@ -1977,7 +2082,14 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.ZInterStore;
-            redisCommand.Params = new List<object> { numKeys, keys };
+            redisCommand.Params = new List<object> { numKeys };
+            if (keys != null && keys.Length > 0)
+            {
+                foreach (var item in keys)
+                {
+                    redisCommand.Params.Add(item);
+                }
+            }
             return SendCommand<long>(redisCommand);
         }
 
@@ -2006,7 +2118,14 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.ZMScore;
-            redisCommand.Params = new List<object> { key, members };
+            redisCommand.Params = new List<object> { key };
+            if (members != null && members.Length > 0)
+            {
+                foreach (var item in members)
+                {
+                    redisCommand.Params.Add(item);
+                }
+            }
             return SendCommand<IList<object>>(redisCommand);
         }
 
@@ -2142,7 +2261,14 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.ZRem;
-            redisCommand.Params = new List<object> { key, members };
+            redisCommand.Params = new List<object> { key };
+            if (members != null && members.Length > 0)
+            {
+                foreach (var item in members)
+                {
+                    redisCommand.Params.Add(item);
+                }
+            }
             return SendCommand<long>(redisCommand);
         }
 
@@ -2297,7 +2423,14 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.ZUnion;
-            redisCommand.Params = new List<object> { numKeys, keys };
+            redisCommand.Params = new List<object> { numKeys };
+            if (keys != null && keys.Length > 0)
+            {
+                foreach (var item in keys)
+                {
+                    redisCommand.Params.Add(item);
+                }
+            }
             return SendCommand<IList<object>>(redisCommand);
         }
 
@@ -2312,7 +2445,14 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.ZUnionStore;
-            redisCommand.Params = new List<object> { destination, numKeys, keys };
+            redisCommand.Params = new List<object> { destination, numKeys };
+            if (keys != null && keys.Length > 0)
+            {
+                foreach (var item in keys)
+                {
+                    redisCommand.Params.Add(item);
+                }
+            }
             return SendCommand<long>(redisCommand);
         }
         #endregion
@@ -2446,7 +2586,7 @@ namespace SoftSunlight.RedisClient
         {
             RedisCommand redisCommand = new RedisCommand();
             redisCommand.RedisCommands = RedisCommandEnum.Watch;
-            redisCommand.Params = new object[] { keys };
+            redisCommand.Params = keys;
             return SendCommand<string>(redisCommand).Equals("OK", StringComparison.OrdinalIgnoreCase) ? true : false;
         }
         #endregion

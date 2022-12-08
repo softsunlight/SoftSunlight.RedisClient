@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SoftSunlight.RedisClient.Attributes;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -201,7 +202,9 @@ namespace SoftSunlight.RedisClient.Enum
         #endregion
 
         #region Bloom Filter
+        [CommandAlias("BF.Add")]
         BFAdd,
+        [CommandAlias("BF.Exists")]
         BFExists,
         #endregion
     }

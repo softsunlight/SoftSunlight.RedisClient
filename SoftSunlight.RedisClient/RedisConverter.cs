@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
+using SoftSunlight.RedisClient.Attributes;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace SoftSunlight.RedisClient
@@ -20,13 +22,18 @@ namespace SoftSunlight.RedisClient
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.Append("*").Append(1 + (redisCommand.Params != null ? redisCommand.Params.Count : 0)).Append("\r\n");
             string cmdName = "";
-            if (redisCommand.RedisCommands == Enum.RedisCommandEnum.BFAdd)
+            Type enumType = redisCommand.RedisCommands.GetType();
+            var currentEnumField = enumType.GetFields().FirstOrDefault(p => p.Name == redisCommand.RedisCommands.ToString());
+            if (currentEnumField == null)
             {
-                cmdName = "BF.Add";
+                throw new Exception("unknown command name");
             }
-            else if (redisCommand.RedisCommands == Enum.RedisCommandEnum.BFExists)
+            var attrs = currentEnumField.GetCustomAttributes(typeof(CommandAliasAttribute), false);
+            if (attrs != null)
             {
-                cmdName = "BF.Exists";
+                var obj = attrs[0];
+                Type attrType = typeof(CommandAliasAttribute);
+                cmdName = attrType.GetProperty("Name").GetValue(obj)?.ToString();
             }
             else
             {
@@ -38,7 +45,8 @@ namespace SoftSunlight.RedisClient
                 foreach (var item in redisCommand.Params)
                 {
                     string itemStr = GetObjectStringValue(item);
-                    stringBuilder.Append("$").Append(itemStr.Length).Append("\r\n").Append(itemStr).Append("\r\n");
+                    byte[] data = Encoding.UTF8.GetBytes(itemStr);
+                    stringBuilder.Append("$").Append(data.Length).Append("\r\n").Append(itemStr).Append("\r\n");
                 }
             }
             return stringBuilder.ToString();
