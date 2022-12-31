@@ -29,7 +29,7 @@ namespace SoftSunlight.RedisClient
                 throw new Exception("unknown command name");
             }
             var attrs = currentEnumField.GetCustomAttributes(typeof(CommandAliasAttribute), false);
-            if (attrs != null)
+            if (attrs != null && attrs.Length > 0)
             {
                 var obj = attrs[0];
                 Type attrType = typeof(CommandAliasAttribute);

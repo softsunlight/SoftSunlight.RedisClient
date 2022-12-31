@@ -30,7 +30,7 @@ namespace SoftSunlight.RedisClient
         /// <summary>
         /// 响应数据
         /// </summary>
-        private string responseData;
+        private byte[] responseDatas;
         /// <summary>
         /// Redis集群地址
         /// </summary>
@@ -134,33 +134,33 @@ namespace SoftSunlight.RedisClient
                 networkStream.Write(buffer, 0, buffer.Length);
             }
             autoResetEvent.WaitOne();
-            string orignalData = responseData;
-            if (orignalData.IndexOf("-") == 0)//redis错误信息
+            byte[] orignalDatas = responseDatas;
+            if (orignalDatas[0] == '-')//redis错误信息
             {
-                throw new Exception(orignalData.Substring(1, orignalData.Length - 3));
+                throw new Exception(Encoding.UTF8.GetString(orignalDatas, 1, orignalDatas.Length - 3));
             }
-            else if (orignalData.IndexOf("+") == 0)//单行字符串
+            else if (orignalDatas[0] == '+')//单行字符串
             {
                 object obj = string.Empty;
-                obj = orignalData.Substring(1, orignalData.Length - 3);
+                obj = Encoding.UTF8.GetString(orignalDatas, 1, orignalDatas.Length - 3);
                 return (T)obj;
             }
-            else if (orignalData.IndexOf(":") == 0)//整数
+            else if (orignalDatas[0] == ':')//整数
             {
                 var obj = Activator.CreateInstance(typeof(T));
-                obj = Convert.ToInt64(orignalData.Substring(1, orignalData.Length - 3));
+                obj = Convert.ToInt64(Encoding.UTF8.GetString(orignalDatas, 1, orignalDatas.Length - 3));
                 return (T)obj;
             }
-            else if (orignalData.IndexOf("$") == 0)//多行字符串
+            else if (orignalDatas[0] == '$')//多行字符串
             {
                 object obj = string.Empty;
                 int count = 0;
                 int validCharIndex = 0;
-                for (var i = 1; i < orignalData.Length; i++)
+                for (var i = 1; i < orignalDatas.Length; i++)
                 {
-                    if (orignalData[i] == '\r')
+                    if (orignalDatas[i] == '\r')
                     {
-                        count = Convert.ToInt32(orignalData.Substring(1, i - 1));
+                        count = Convert.ToInt32(Encoding.UTF8.GetString(orignalDatas, 1, i - 1));
                         validCharIndex = i + 2;
                         break;
                     }
@@ -169,33 +169,33 @@ namespace SoftSunlight.RedisClient
                 {
                     return default(T);
                 }
-                obj = orignalData.Substring(validCharIndex, count);
+                obj = Encoding.UTF8.GetString(orignalDatas, validCharIndex, count);
                 return (T)obj;
             }
-            else if (orignalData.IndexOf("*") == 0)//数组
+            else if (orignalDatas[0] == '*')//数组
             {
                 //订阅："*3\r\n$7\r\nmessage\r\n$11\r\ntestChannel\r\n$2\r\n11\r\n"
                 object obj = null;
                 List<string> list = new List<string>();
-                int spaceIndex = orignalData.IndexOf('\r');
-                int arrayLength = Convert.ToInt32(orignalData.Substring(1, spaceIndex - 1));
-                orignalData = orignalData.Substring(spaceIndex + 2);
-                int index = 0;
-                do
-                {
-                    if (orignalData.IndexOf("$") == 0)
-                    {
-                        spaceIndex = orignalData.IndexOf('\r');
-                        int count = Convert.ToInt32(orignalData.Substring(1, spaceIndex - 1));
-                        list.Add(orignalData.Substring(spaceIndex + 2, count));
-                        orignalData = orignalData.Substring(spaceIndex + 2 + count + 2);
-                    }
-                    else if (orignalData.IndexOf(":") == 0)
-                    {
-                        list.Add(orignalData.Substring(1, orignalData.Length - 3));
-                    }
-                } while (++index < arrayLength);
-                obj = string.Join(" ", list);
+                //int spaceIndex = orignalData.IndexOf('\r');
+                //int arrayLength = Convert.ToInt32(orignalData.Substring(1, spaceIndex - 1));
+                //orignalData = orignalData.Substring(spaceIndex + 2);
+                //int index = 0;
+                //do
+                //{
+                //    if (orignalData.IndexOf("$") == 0)
+                //    {
+                //        spaceIndex = orignalData.IndexOf('\r');
+                //        int count = Convert.ToInt32(orignalData.Substring(1, spaceIndex - 1));
+                //        list.Add(orignalData.Substring(spaceIndex + 2, count));
+                //        orignalData = orignalData.Substring(spaceIndex + 2 + count + 2);
+                //    }
+                //    else if (orignalData.IndexOf(":") == 0)
+                //    {
+                //        list.Add(orignalData.Substring(1, orignalData.Length - 3));
+                //    }
+                //} while (++index < arrayLength);
+                //obj = string.Join(" ", list);
                 return (T)obj;
             }
             return default(T);
@@ -243,42 +243,41 @@ namespace SoftSunlight.RedisClient
                                 int realReadCount = networkStream.Read(buffer, 0, buffer.Length);
                                 memoryStream.Write(buffer, 0, realReadCount);
                             } while (networkStream.DataAvailable);
-                            responseData = string.Empty;
-                            string responseStr = Encoding.UTF8.GetString(memoryStream.ToArray());
+
+                            responseDatas = memoryStream.ToArray();
                             memoryStream.Close();
-                            if (string.IsNullOrEmpty(responseStr))
+                            if (responseDatas == null || responseDatas.Length <= 0)
                             {
                                 break;
                             }
-                            responseData = responseStr;
-                            if (responseData.Contains("\r\nmessage\r\n"))//订阅消息
-                            {
-                                string orignalData = responseData;
-                                List<string> list = new List<string>();
-                                int spaceIndex = orignalData.IndexOf('\r');
-                                int arrayLength = Convert.ToInt32(orignalData.Substring(1, spaceIndex - 1));
-                                orignalData = orignalData.Substring(spaceIndex + 2);
-                                int index = 0;
-                                do
-                                {
-                                    if (orignalData.IndexOf("$") == 0)
-                                    {
-                                        spaceIndex = orignalData.IndexOf('\r');
-                                        int count = Convert.ToInt32(orignalData.Substring(1, spaceIndex - 1));
-                                        list.Add(orignalData.Substring(spaceIndex + 2, count));
-                                        orignalData = orignalData.Substring(spaceIndex + 2 + count + 2);
-                                    }
-                                    else if (orignalData.IndexOf(":") == 0)
-                                    {
-                                        list.Add(orignalData.Substring(1, orignalData.Length - 3));
-                                    }
-                                } while (++index < arrayLength);
-                                if (this.Subscribed != null)
-                                {
-                                    this.Subscribed(new SubscribeEventArgs() { Channel = list[1], Message = list[2] });
-                                }
-                            }
-                            else
+                            //if (responseData.Contains("\r\nmessage\r\n"))//订阅消息
+                            //{
+                            //    string orignalData = responseData;
+                            //    List<string> list = new List<string>();
+                            //    int spaceIndex = orignalData.IndexOf('\r');
+                            //    int arrayLength = Convert.ToInt32(orignalData.Substring(1, spaceIndex - 1));
+                            //    orignalData = orignalData.Substring(spaceIndex + 2);
+                            //    int index = 0;
+                            //    do
+                            //    {
+                            //        if (orignalData.IndexOf("$") == 0)
+                            //        {
+                            //            spaceIndex = orignalData.IndexOf('\r');
+                            //            int count = Convert.ToInt32(orignalData.Substring(1, spaceIndex - 1));
+                            //            list.Add(orignalData.Substring(spaceIndex + 2, count));
+                            //            orignalData = orignalData.Substring(spaceIndex + 2 + count + 2);
+                            //        }
+                            //        else if (orignalData.IndexOf(":") == 0)
+                            //        {
+                            //            list.Add(orignalData.Substring(1, orignalData.Length - 3));
+                            //        }
+                            //    } while (++index < arrayLength);
+                            //    if (this.Subscribed != null)
+                            //    {
+                            //        this.Subscribed(new SubscribeEventArgs() { Channel = list[1], Message = list[2] });
+                            //    }
+                            //}
+                            //else
                             {
                                 autoResetEvent.Set();
                             }
