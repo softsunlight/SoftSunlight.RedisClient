@@ -27,6 +27,15 @@ namespace SoftSunlight.RedisClient.Test
         }
 
         [Fact]
+        public void PublishTest2()
+        {
+            SsRedisClient ssRedisClient = new SsRedisClient("159.138.237.10:33619");
+            string authResult = ssRedisClient.Auth("7ASvV69tqnkUR5MygBNt");
+            long result = ssRedisClient.Publish("testChannel", "aaa");
+            Assert.Equal(1, result);
+        }
+
+        [Fact]
         public void SubscribeTest()
         {
             SsRedisClient ssRedisClient = new SsRedisClient("192.168.10.131:6379");

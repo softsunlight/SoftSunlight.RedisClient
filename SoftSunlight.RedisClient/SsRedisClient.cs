@@ -2591,7 +2591,13 @@ namespace SoftSunlight.RedisClient
         #endregion
 
         #region Connection Command
-        //public string Auth
+        public string Auth(string password)
+        {
+            RedisCommand redisCommand = new RedisCommand();
+            redisCommand.RedisCommands = RedisCommandEnum.Auth;
+            redisCommand.Params = new object[] { password };
+            return SendCommand<string>(redisCommand);
+        }
 
         /// <summary>
         /// 打印一个给定的信息message
